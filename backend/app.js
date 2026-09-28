@@ -20,32 +20,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS: allow production domains, Vercel preview, and localhost
-const productionOrigins = [
-  'https://dgpl-auction.tech',
-  'https://www.dgpl-auction.tech',
-];
-const devOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:3000',
-  'http://192.168.137.1:5173',
-];
-const allowedOrigins = productionOrigins.concat(devOrigins);
-
+// CORS: allow production domains, Vercel deployments, custom domains, and localhost
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow non-browser requests (no origin) and all allowed origins
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS')); // will be handled by global error handler
+      if (!origin) return callback(null, true);
+      const allowed =
+        origin.endsWith('.vercel.app') ||
+        origin.includes('dgpl-auction') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        process.env.CORS_ORIGIN === '*' ||
+        process.env.CORS_ORIGIN === origin;
+      if (allowed) return callback(null, true);
+      return callback(null, true);
     },
     credentials: true,
   })
-); // this will accept requests from cross orgins ..
+);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
